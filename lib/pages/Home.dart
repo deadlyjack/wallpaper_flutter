@@ -1,6 +1,10 @@
+import 'dart:io';
+
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:wallpaper/ThemeColor.dart';
+import 'package:wallpaper/api.dart';
 import 'package:wallpaper/components/alert.dart';
 import 'package:wallpaper/components/card.dart';
 import 'package:wallpaper/plugins/permission.dart';
@@ -17,15 +21,24 @@ class _HomeState extends State<Home> {
   static const READ_EXTERNAL_STORAGE =
       'android.permission.READ_EXTERNAL_STORAGE';
 
+  final api = Api(10);
   var hasReadPermission = false;
+  String homeImage = '';
+  String lockImage = '';
 
   @override
   void initState() {
-    Permission.has(READ_EXTERNAL_STORAGE).then((value) {
-      hasReadPermission = value;
-      print(hasReadPermission);
-    });
+    init();
     super.initState();
+  }
+
+  void init() async {
+    hasReadPermission = await Permission.has(READ_EXTERNAL_STORAGE);
+    homeImage = await Wallpaper.getHomeWallpaperImage();
+    lockImage = await Wallpaper.getLockWallpaperImage();
+    if (mounted) {
+      setState(() {});
+    }
   }
 
   @override
@@ -59,38 +72,85 @@ class _HomeState extends State<Home> {
         ],
       ),
       body: Column(
+        mainAxisSize: MainAxisSize.max,
         children: [
-          TextButton(
-            style: TextButton.styleFrom(padding: EdgeInsets.zero),
-            onPressed: () async {
-              setState(() async {
-                hasReadPermission =
+          SizedBox(
+            width: double.infinity,
+          ),
+          if (!hasReadPermission) ...[
+            TextButton(
+              style: TextButton.styleFrom(padding: EdgeInsets.zero),
+              onPressed: () async {
+                var permission =
                     await Permission.request(READ_EXTERNAL_STORAGE);
-              });
-            },
-            child: Container(
-              height: 60.0,
-              color: Color(0xff993333),
-              child: Center(
-                child: Text(
-                  'Read permission not granted',
-                  style: TextStyle(color: Colors.white),
+                setState(() => hasReadPermission = permission);
+              },
+              child: Container(
+                height: 60.0,
+                color: Color(0xff993333),
+                child: Center(
+                  child: Text(
+                    'Read permission not granted',
+                    style: TextStyle(color: Colors.white),
+                  ),
                 ),
               ),
-            ),
-          ),
-          Padding(
-            padding: const EdgeInsets.only(top: 20.0),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-              children: [
-                card(),
-                card(),
-              ],
+            )
+          ],
+          Expanded(
+            child: SingleChildScrollView(
+              scrollDirection: Axis.vertical,
+              child: Padding(
+                padding: const EdgeInsets.only(top: 6.0),
+                child: Wrap(
+                  crossAxisAlignment: WrapCrossAlignment.start,
+                  direction: Axis.horizontal,
+                  children: buildCards(),
+                ),
+              ),
             ),
           ),
         ],
       ),
     );
+  }
+
+  List<Widget> buildCards() {
+    List<Widget> list = [
+      Container(
+        width: double.infinity,
+      )
+    ];
+    String label = 'Home Screen';
+
+    if (homeImage.isNotEmpty && lockImage.isEmpty) {
+      label = 'Home & Lock Screen';
+    }
+
+    if (homeImage.isNotEmpty) {
+      final image = FileImage(File(homeImage));
+      list.add(
+        card(
+          context,
+          1,
+          image: image,
+          label: label,
+        ),
+      );
+    }
+
+    if (lockImage.isNotEmpty) {
+      final image = FileImage(File(lockImage));
+      list.add(
+        card(
+          context,
+          2,
+          image: image,
+          label: 'Lock Screen',
+        ),
+      );
+    }
+
+    return list;
   }
 }

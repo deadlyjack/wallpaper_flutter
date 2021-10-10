@@ -14,4 +14,28 @@ class Wallpaper {
 
     return wallpaper;
   }
+
+  static Future<String> getHomeWallpaperImage() async {
+    String wallpaper;
+
+    try {
+      wallpaper = await _platform.invokeMethod('getHomeScreenWallpaper');
+    } on PlatformException catch (e) {
+      wallpaper = "Failed to get wallpaper: '${e.message}'.";
+    }
+
+    return wallpaper;
+  }
+
+  static Future<String> getLockWallpaperImage() async {
+    String wallpaper;
+
+    try {
+      wallpaper = await _platform.invokeMethod('getLockScreenWallpaper');
+    } on PlatformException catch (e) {
+      wallpaper = "Failed to get wallpaper: '${e.message}'.";
+    }
+
+    return wallpaper;
+  }
 }

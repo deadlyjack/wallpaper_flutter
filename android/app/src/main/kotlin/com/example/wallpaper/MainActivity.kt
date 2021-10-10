@@ -22,20 +22,21 @@ class MainActivity : FlutterActivity() {
         private const val CHANNEL = "com.foxdebug.wallpaper"
         private const val REQ_PERMISSION_CODE = 1
     }
+
     private var result: MethodChannel.Result? = null
     override fun configureFlutterEngine(@NonNull flutterEngine: FlutterEngine) {
         super.configureFlutterEngine(flutterEngine)
         MethodChannel(flutterEngine.dartExecutor.binaryMessenger, CHANNEL)
-            .setMethodCallHandler { call, result ->
-                this.result = result
-                when (call.method) {
-                    "getHomeScreenWallpaper" -> getHomeScreenWallpaper()
-                    "getLockScreenWallpaper" -> getLockScreenWallpaper()
-                    "hasPermission" -> hasPermission(call.argument<String>("permission"))
-                    "getPermission" -> getPermission(call.argument<String>("permission"))
-                    else -> result.notImplemented()
+                .setMethodCallHandler { call, result ->
+                    this.result = result
+                    when (call.method) {
+                        "getHomeScreenWallpaper" -> getHomeScreenWallpaper()
+                        "getLockScreenWallpaper" -> getLockScreenWallpaper()
+                        "hasPermission" -> hasPermission(call.argument<String>("permission"))
+                        "getPermission" -> getPermission(call.argument<String>("permission"))
+                        else -> result.notImplemented()
+                    }
                 }
-            }
     }
 
     private fun getHomeScreenWallpaper() {
@@ -49,10 +50,10 @@ class MainActivity : FlutterActivity() {
     private fun hasPermission(permission: String?) {
         permission?.let { it ->
             result?.success(
-                ActivityCompat.checkSelfPermission(
-                    this,
-                    it
-                ) != PackageManager.PERMISSION_GRANTED
+                    ActivityCompat.checkSelfPermission(
+                            this,
+                            it
+                    ) == PackageManager.PERMISSION_GRANTED
             )
         } ?: run {
             result?.error("MISSING_ARG", "Permission argument is missing", "")
@@ -61,9 +62,9 @@ class MainActivity : FlutterActivity() {
 
     private fun getPermission(permission: String?) {
         permission?.let { it ->
-            if(ContextCompat.checkSelfPermission(context, it) == PackageManager.PERMISSION_GRANTED){
+            if (ContextCompat.checkSelfPermission(context, it) == PackageManager.PERMISSION_GRANTED) {
                 result?.success(true)
-            }else{
+            } else {
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
                     requestPermissions(arrayOf(permission), REQ_PERMISSION_CODE)
                 } else {
@@ -76,11 +77,11 @@ class MainActivity : FlutterActivity() {
     }
 
     override fun onRequestPermissionsResult(
-        requestCode: Int,
-        permissions: Array<out String>,
-        grantResults: IntArray
+            requestCode: Int,
+            permissions: Array<out String>,
+            grantResults: IntArray
     ) {
-        when(requestCode){
+        when (requestCode) {
             REQ_PERMISSION_CODE -> {
                 result?.success(grantResults[0] == PackageManager.PERMISSION_GRANTED)
             }
@@ -92,12 +93,11 @@ class MainActivity : FlutterActivity() {
         val wallpaperManager = WallpaperManager.getInstance(context)
 
         if (ActivityCompat.checkSelfPermission(
-                this,
-                Manifest.permission.READ_EXTERNAL_STORAGE
-            ) != PackageManager.PERMISSION_GRANTED
+                        this,
+                        Manifest.permission.READ_EXTERNAL_STORAGE
+                ) == PackageManager.PERMISSION_GRANTED
         ) {
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
-
                 val wallpaperFile: ParcelFileDescriptor? = when (which) {
                     "home" -> WallpaperManager.FLAG_SYSTEM
                     "lock" -> WallpaperManager.FLAG_LOCK
@@ -110,7 +110,7 @@ class MainActivity : FlutterActivity() {
                 }
 
                 bitmap = BitmapFactory.decodeFileDescriptor(
-                    wallpaperFile.fileDescriptor
+                        wallpaperFile.fileDescriptor
                 )
             } else {
                 val drawable = wallpaperManager.drawable
@@ -120,18 +120,18 @@ class MainActivity : FlutterActivity() {
                     drawable.bitmap?.let { bitmap = it }
                 } else {
                     bitmap = Bitmap.createBitmap(
-                        if (instrinsicWidth <= 0) 1 else instrinsicWidth,
-                        if (instrinsicHeight <= 0) 1 else instrinsicHeight,
-                        Bitmap.Config.ARGB_8888
+                            if (instrinsicWidth <= 0) 1 else instrinsicWidth,
+                            if (instrinsicHeight <= 0) 1 else instrinsicHeight,
+                            Bitmap.Config.ARGB_8888
                     )
                 }
             }
 
             if (bitmap == null) {
                 result?.error(
-                    "WALLPAPER_ERROR",
-                    "Cannot get wallpaper.",
-                    "Unable to get bitmap of wallpaper"
+                        "WALLPAPER_ERROR",
+                        "Cannot get wallpaper.",
+                        "Unable to get bitmap of wallpaper"
                 )
                 return
             }
@@ -143,9 +143,9 @@ class MainActivity : FlutterActivity() {
                 result?.success(file.absolutePath)
             } else {
                 result?.error(
-                    "WALLPAPER_ERROR",
-                    "Cannot get wallpaper.",
-                    "Unable to compress wallpaper"
+                        "WALLPAPER_ERROR",
+                        "Cannot get wallpaper.",
+                        "Unable to compress wallpaper"
                 )
             }
 

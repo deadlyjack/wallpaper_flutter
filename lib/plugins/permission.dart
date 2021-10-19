@@ -4,16 +4,20 @@ class Permission {
   static const _platform = MethodChannel('com.foxdebug.wallpaper');
 
   static Future<bool> has(String permission) async {
-    return await _platform.invokeMethod(
+    bool? res = await _platform.invokeMethod(
       "hasPermission",
       {"permission": permission},
     );
+
+    return res ?? false;
   }
 
   static Future<bool> request(String permission) async {
-    return await _platform.invokeMethod(
+    bool? res = await _platform.invokeMethod(
       "getPermission",
       {"permission": permission},
     );
+
+    return res ?? false;
   }
 }
